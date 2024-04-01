@@ -4,18 +4,17 @@ if arg[2] == "debug" then
 end
 
 local border = 50
-local squareSize = 20
-local gap = 1
-local rows, columns = 20,20
+local squareSize = 10
+local gap = 0
+local rows, columns = 40,40
 local pathType = {LINEAR=1, EFFICIENT=2, RANDOM=3}
 
 local tiles
 local enter, exit
 
-local function isWall(x,y, num)
-    num = num or 1
+local function isWall(x,y)
     if x > 0 and y > 0 then
-        return tiles[y][x] == num
+        return tiles[y][x] > 0
     end
     return true
 end
@@ -71,18 +70,20 @@ local function generatePath(type, num)
     elseif type == pathType.RANDOM then
         local x,y = enter.x,enter.y
         local directions = {UP=1, DOWN=2, LEFT=3, RIGHT=4}
-        while x ~= exit.x or y ~= exit.y do
+        while (x ~= exit.x or y ~= exit.y) 
+            and ((x ~= exit.x - 1 and x ~= exit.x + 1) or y ~= exit.y)
+            and (x ~= exit.x or (y ~= exit.y - 1 and y ~= exit.y + 1)) do
             local valid = {}
-            if not (isWall(x,y-1) or isWall(x,y-1,num)) then
+            if not isWall(x,y-1) then
                 table.insert(valid, directions.UP)
             end
-            if not (isWall(x,y+1) or isWall(x,y+1,num)) then
+            if not isWall(x,y+1) then
                 table.insert(valid, directions.DOWN)
             end
-            if not (isWall(x-1,y) or isWall(x-1,y,num)) then
+            if not isWall(x-1,y) then
                 table.insert(valid, directions.LEFT)
             end
-            if not (isWall(x+1,y) or isWall(x+1,y,num)) then
+            if not isWall(x+1,y) then
                 table.insert(valid, directions.RIGHT)
             end
 
@@ -116,6 +117,7 @@ local function generatePath(type, num)
                 move = valid[love.math.random(#valid)]
             end
 
+            local x0,y0 = x,y
             if move == directions.UP then
                 y = y - 1
             elseif move == directions.DOWN then
@@ -129,6 +131,19 @@ local function generatePath(type, num)
             end
             if tiles[y][x] == 0 then
                 tiles[y][x] = num
+            end
+
+            if not isWall(x0,y0-1) then
+                tiles[y0-1][x0] = 1
+            end
+            if not isWall(x0,y0+1) then
+                tiles[y0+1][x0] = 1
+            end
+            if not isWall(x0-1,y0) then
+                tiles[y0][x0-1] = 1
+            end
+            if not isWall(x0+1,y0) then
+                tiles[y0][x0+1] = 1
             end
         end
     end
